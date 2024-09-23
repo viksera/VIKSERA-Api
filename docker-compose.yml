@@ -1,0 +1,37 @@
+services:
+  user_service:
+    build:
+      context: ./Viksera-User-Service
+      dockerfile: Dockerfile
+    image: viksera-user-service
+    volumes:
+      - ./Viksera-User-Service:/app
+      - ./logs/user-service:/.pm2/logs
+    ports:
+      - "8080:8080" 
+    environment:
+      - NODE_ENV=development 
+      - Monog
+  mongo:
+    container_name: mongo
+    restart: on-failure
+    image: mongo
+    ports:
+      - 27018:27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=mongopassword
+      - MONGO_INITDB_DATABASE=viksera-test-db
+    volumes:
+      - ./data/mongo:/data/db
+  postgres:
+    container_name: postgres
+    image: postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=viksera_test_db
