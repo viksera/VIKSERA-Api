@@ -8,10 +8,21 @@ services:
       - ./Viksera-User-Service:/app
       - ./logs/user-service:/.pm2/logs
     ports:
-      - "8080:8080" 
+      - "8000:8000" 
     environment:
       - NODE_ENV=development 
-      - Monog
+  business_user_service:
+    build:
+      context: ./Viksera-Businessowner-Service
+      dockerfile: Dockerfile
+    image: viksera-businessowner-service
+    volumes:
+      - ./Viksera-Businessowner-Service:/app
+      - ./logs/businessowner-service:/.pm2/logs
+    ports:
+      - "8001:8000" 
+    environment:
+      - NODE_ENV=development 
   mongo:
     container_name: mongo
     restart: on-failure
