@@ -1,0 +1,83 @@
+const { MongoClient, ObjectId } = require("mongodb");
+
+class MongoDBClient {
+    constructor(uri, dbName) {
+        this.uri = uri;
+        this.dbName = dbName;
+        this.client = null;
+        this.db = null;
+    }
+
+    // Connect to MongoDB
+    async connect() {
+        try {
+            this.client = new MongoClient(this.uri, { useNewUrlParser: true, useUnifiedTopology: true });
+            await this.client.connect();
+            this.db = this.client.db(this.dbName);
+            console.log("Connected to MongoDB");
+        } catch (error) {
+            console.log("Error connecting to MongoDB:", error);
+        }
+    }
+
+    // Create or upsert a document in a collection
+    async create(collectionName, data, docId = undefined) {
+        try {
+            const collection = this.db.collection(collectionName);
+            if (docId) {
+                data._id = new ObjectId(docId);
+                await collection.updateOne({ _id: data._id }, { $set: data }, { upsert: true });
+                return true;
+            } else {
+                const result = await collection.insertOne(data);
+                return result.insertedId;
+            }
+        } catch (error) {
+            console.log("Error in Create:", error);
+            return false;
+        }
+    }
+
+    // Update a document in a collection
+    async update(collectionName, data, docId) {
+        try {
+            const collection = this.db.collection(collectionName);
+            await collection.updateOne({ _id: new ObjectId(docId) }, { $set: data }, { upsert: true });
+            return true;
+        } catch (error) {
+            console.log("Error in Update:", error);
+            return false;
+        }
+    }
+
+    // Delete a document from a collection
+    async delete(collectionName, docId) {
+        try {
+            const collection = this.db.collection(collectionName);
+            await collection.deleteOne({ _id: new ObjectId(docId) });
+            return true;
+        } catch (error) {
+            console.log("Error in Delete:", error);
+            return false;
+        }
+    }
+
+    // Read documents with optional filtering, sorting, and pagination
+    async read(collectionName, docId = undefined, filter = {}, limit = 10, sort = { index: -1 }) {
+        try {
+            const collection = this.db.collection(collectionName);
+            if (docId) {
+                const doc = await collection.findOne({ _id: new ObjectId(docId) });
+                return doc ? { ...doc, DocId: doc._id } : null;
+            } else {
+                const docs = await collection.find(filter).sort(sort).limit(limit).toArray();
+                return docs.map(doc => ({ ...doc, DocId: doc._id }));
+            }
+        } catch (error) {
+            console.log("Error in Read:", error);
+            return false;
+        }
+    }
+}
+
+module.exports = MongoDBClient;
