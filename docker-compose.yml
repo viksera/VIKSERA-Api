@@ -11,6 +11,11 @@ services:
       - "8000:8000" 
     environment:
       - NODE_ENV=development 
+      - POSTGRES_USER=postgres
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=viksera_test_db
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_PORT=5432
   business_user_service:
     build:
       context: ./Viksera-Businessowner-Service
@@ -23,6 +28,11 @@ services:
       - "8001:8000" 
     environment:
       - NODE_ENV=development 
+      - POSTGRES_USER=postgres
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=viksera_test_db
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_PORT=5432
   mongo:
     container_name: mongo
     restart: on-failure
@@ -32,7 +42,7 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=mongopassword
-      - MONGO_INITDB_DATABASE=viksera-test-db
+      - MONGO_INITDB_DATABASE=viksera_test_db
     volumes:
       - ./data/mongo:/data/db
   postgres:

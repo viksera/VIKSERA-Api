@@ -1,7 +1,9 @@
-const http = require("http");
+require('dotenv').config();
+const express = require("express");
+const app = express();
 
-http.createServer(function (req, res) {
-    res.writeHead(200, {'Content-Type': 'text/plain'});
-    res.write('User service is running ');
-    res.end();
-  }).listen(8000);
+const port = process.env.PORT || 8000
+
+app.listen(8000, () =>{
+  console.log(" app listening on port ", port)
+})
