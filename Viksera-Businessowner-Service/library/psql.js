@@ -16,7 +16,7 @@ class Psql {
     async  #connectToDatabase() {
         try {
             await this.client.connect();
-            console.log('Connected to PostgreSQL database');
+            console.log('Connected to PSQL database');
         } catch (error) {
             console.error('Database connection error:', error);
             throw new Error(error)

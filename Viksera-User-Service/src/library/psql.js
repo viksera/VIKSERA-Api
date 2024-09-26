@@ -151,11 +151,11 @@ class Psql {
         try {
             await this.#connectToDatabase();
             const res = await this.client.query(query, params);
-            console.log("Query executed in the DB result", res.rows);
+            console.log("Query executed in the DB result ", res.rows);
             return res.rows;
         } catch (error) {
             console.error('Error executing the query ', tableName, condition, params, error);
-            throw new Error(`Failed to execut the query ${tableName}`); 
+            throw new Error(`Failed to execut the query in the ${tableName}`); 
         } finally {
             await this.#closeConnection();
         }
