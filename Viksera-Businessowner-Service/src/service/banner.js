@@ -1,4 +1,5 @@
-const BannerModel = require("../models/banner")
+const BannerModel = require("../models/banner");
+const { error } = require("../utils/response");
 
 class Banner {
 
@@ -23,11 +24,11 @@ class Banner {
                 status: true,
             });
             console.log('[insertBannerData] New banner created:', newBanner.toJSON());
-            return newBanner.toJSON();
+            return {data:newBanner.toJSON(), error: null};
 
         } catch (error) {
             console.log("[insertBannerData] Failed to upload banner into DB",title, type, imageUrl, targetAudience, error);
-            return false;
+            return {data: null, error};
         }
 
     }
@@ -44,10 +45,10 @@ class Banner {
                 throw new Error("No record found with the ID", id);
             }
             console.log('[getBannerByID] Banner found:', banner.toJSON());
-            return  banner.toJSON();
+            return  {data: banner.toJSON(), error: null};
         } catch (error) {
             console.log("[getBannerByID] Error in getting the Banner Data from DB", error);
-            return false;
+            return {data: null, error};
         } 
 
 
@@ -67,11 +68,11 @@ class Banner {
             });
             
             console.log("[deleteBannerByID] deleted the record from the DB", res);
-            return res;
+            return {data: res, error: null};
 
         } catch (error) {
             console.log("[deleteBannerByID] Error in deleting the Banner Data from DB", error);
-            return false;
+            return {data: null, error};
         }
     }
 
@@ -106,11 +107,11 @@ class Banner {
             if (!(result[0] > 0)) {
                 throw new Error("Failed to update the banner records", id, updateData);
             } 
-            return true;
+            return {data: result, error: null};
 
         } catch (error) {
             console.log("[updateBannerByID] error in updating the banner by ID", error);
-            return false;
+            return {data: null, error: error};
         }
     }
     
@@ -118,20 +119,30 @@ class Banner {
      * Get all the banners with paginated results
      * @param {number} page 
      * @param {number} limit 
+     * @param { "all" | "true" | "false"} status
      */
-    async getAllBanners(page, limit) {
+    async getAllBanners(page = 1, limit, status) {
         try {
-            const offset = (page - 1) * limit; 
-            const banners = await BannerModel.findAll({
-                limit: limit,
-                offset: offset
-            });
-            console.log("[getAllBanners] obtained all banners ", banners);
-            return banners;
+            const options = {
+                offset: (page - 1) * (limit || 0)
+            };
+            if (status != null) {
+                options.where = {
+                    status: status
+                };
+            }
+
+            if (limit){
+                options.limit = limit;
+            }
+            
+            const banners = await BannerModel.findAll(options);
+            return {data: banners, error: null};
+
 
         } catch (error) {
             console.log("[getAllBanners] Error in dettting the Banner Data from DB", error);
-            return false;
+            return {data: null, error: error};
         }
     }
 
@@ -139,15 +150,21 @@ class Banner {
      * To find the total number of banners in the DB
      * @returns the total Banner count 
      */
-    async getTotalBannersCount() {
+    async getTotalBannersCount(status) {
         try {
-            const banners = await BannerModel.count();
+            let options = {};
+            if (status != null) {
+                options.where = {
+                    status: status
+                }
+            }
+            const banners = await BannerModel.count(options);
             console.log("[getTotalBannersCount] obtained all banners count ", banners);
-            return banners;
+                return {data: banners, error:null};
 
         } catch (error) {
             console.log("[getTotalBannersCount] Error in getting the Banner count Data from DB", error);
-            return false;
+            return {data: null, error: error};
         }
     }
 }

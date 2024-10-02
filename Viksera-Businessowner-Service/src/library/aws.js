@@ -20,7 +20,7 @@ class AWS {
      * @param {string} filePath 
      */
     async uploadToS3(bucketName, key, filePath) {
-        key = `banners/${key}`;
+        key = bucketName;
         console.log({
             endpoint: process.env.AWS_ENDPOINT ,
             forcePathStyle: true, // Required for LocalStack
@@ -62,7 +62,7 @@ class AWS {
      */
     async deleteFromS3(objectKey) {
         try {
-            const key = `banners/${objectKey}`;
+            const key = objectKey;
             const params = { Bucket: process.env.AWS_BUCKET, Key: key };
             const deleteObjectCommand = new DeleteObjectCommand(params);
             const data = await this.s3Client.send(deleteObjectCommand);

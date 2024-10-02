@@ -1,7 +1,9 @@
 const AWS = require("../library/aws");
 const BannerService = require("../service/banner");
 const Response = require("../utils/response");
+const Helper = require("../utils/helpers")
 const { v4: uuidv4 } = require('uuid');
+const banner = require("../service/banner");
 
 class BannerController {
 
@@ -42,7 +44,7 @@ class BannerController {
             console.log("Banner controller processing upload function")
             
             const id = uuidv4()
-            const objectKey = title + "-" + id;
+            const objectKey = "banners/" + title + "-" + id;
             const imageUrl = await AWS.uploadToS3(process.env.AWS_BUCKET, objectKey, req.file.path);
             
             if (!imageUrl) {
@@ -51,8 +53,8 @@ class BannerController {
             
             console.log("Uploaded image logging public url", imageUrl);
             
-            const result = await BannerService.insertBannerData(title, objectKey, type, imageUrl, targetAudience );
-            if (!result) {
+            const {data: result, error} = await BannerService.insertBannerData(title, objectKey, type, imageUrl, targetAudience );
+            if (error) {
                 throw new Error("Failed to upload Banner data to DB");
             }
             console.log("Inserted banner record to DB", result)
@@ -85,8 +87,8 @@ class BannerController {
     async deleteBanner(req, res) {
         try {
             const id = req.params.id;
-            const banner = await BannerService.getBannerByID(id);
-            if (!banner) {
+            const {data: banner, error} = await BannerService.getBannerByID(id);
+            if (error) {
                 throw new Error("No banner record found with the ID ", id);
             }
             
@@ -96,8 +98,8 @@ class BannerController {
                 throw new Error("Error deleting AWS S3 object");
             }
 
-            const deleteRecordRes = await BannerService.deleteBannerByID(id);
-            if (!deleteRecordRes) {
+            const {data: deleteRecordRes, err} = await BannerService.deleteBannerByID(id);
+            if (err) {
                 throw new Error("Error deleting record from DB");
             }
 
@@ -128,13 +130,13 @@ class BannerController {
                 throw new Error("Invalid request ID not supplied");
             }
     
-            const banner = await BannerService.getBannerByID(id);
-            if (!banner) {
+            const {data:banner, error} = await BannerService.getBannerByID(id);
+            if (error) {
                 throw new Error("No banner record found with the ID ", id);
             }
             
-            const result = await BannerService.updateBannerByID(id, params);
-            if (!result) {
+            const {data: result, err} = await BannerService.updateBannerByID(id, params);
+            if (err) {
                 throw new Error("Error updating the banner in update banner controller");
             }
             console.log("Updated banner result ", result);
@@ -148,17 +150,28 @@ class BannerController {
 
 
     /**
-     * GET /api/v1/banner/get-banners
+     * GET /api/v1/banner/get-banners?page=1&&limit=6&&status=true
+     * @param {number} page [page=1]    optional
+     * @param {number} limit [limit=1]  optional
+     * @param { "true" | "false" | "all"} status [status=true] optional
      * @group Banner - Operation related to Banner
      * @returns 200 Returns the Array of obtained banner results
      */
     async getAllBanners(req, res) {
         try {
             const page = parseInt(req.query.page) || 1; // Default to page 1
-            const limit = parseInt(req.query.limit) || 6; // Default to 6 items per page for the banners
-            const bannerCount = await BannerService.getTotalBannersCount();
-            const banners = await BannerService.getAllBanners(page, limit) || [];
+            const limit = parseInt(req.query.limit) || 6; // Default to 6 items per page for the banners 
+            let status = Helper.getStatus(req.query.status);
 
+            const {data: bannerCount, error} = await BannerService.getTotalBannersCount(status);
+            if (error) {
+                throw new Error("Error in finding banner count");
+            }
+            const {data: banners ,err} = await BannerService.getAllBanners(page, limit, status);
+            if (err) {
+                throw new Error("Error in fetching all banners");
+            }
+            
             res.status(200).send(Response.success(banners, "banner obtained successfully", { 
                 "current_page": page,
                 "next_page": Math.ceil(bannerCount / limit) == page ? 1 : page + 1,
